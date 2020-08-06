@@ -1,0 +1,23 @@
+version: '2'
+
+
+services:
+
+
+  proxy:
+    #image: konvergence/httpd-rproxy
+    build:
+            context: .
+            dockerfile: httpd-rproxy.dockerfile
+    environment:
+      BASIC_AUTH_STRING: KOEOS AD Authentication
+      LISTEN_PORT: '8051'
+      PROXY_URI: http://192.168.56.101:8050
+      PROXY_URI_PREFIX: /dash/
+      BASIC_AUTH_USER: toto
+      BASIC_AUTH_PASSWORD: password
+
+    ports:
+     - "8051:8051"
+
+

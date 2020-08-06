@@ -1,0 +1,49 @@
+Listen ${LISTEN_PORT}
+
+$([[ -v HTTPS_CERT_PEM ]] && { echo "
+  LoadModule ssl_module         modules/mod_ssl.so
+"; })
+
+LoadModule ssl_module         modules/mod_ssl.so
+
+
+LoadModule proxy_module       modules/mod_proxy.so
+LoadModule proxy_http_module  modules/mod_proxy_http.so
+
+$([[ -v ENABLE_WEBSOCKET ]] && [[ "$ENABLE_WEBSOCKET" == "yes" ]] && { echo "
+  LoadModule proxy_wstunnel_module modules/mod_proxy_wstunnel.so
+"; })
+
+
+
+
+$( [[ -v SOCACHE_TIMEOUT ]] && {
+  echo "
+    LoadModule authn_socache_module modules/mod_authn_socache.so
+    LoadModule socache_shmcb_module modules/mod_socache_shmcb.so
+    AuthnCacheSOCache shmcb
+    AuthnCacheEnable
+  ";
+})
+
+
+LogLevel ${LOGLEVEL}
+<VirtualHost *:${LISTEN_PORT}>
+    ServerName ${SERVERNAME}
+    
+   
+    <Location ${PROXY_URI_PREFIX}>
+      AuthType Basic
+      AuthName "${BASIC_AUTH_STRING}"
+
+      AuthUserFile /usr/local/apache2/conf/.htpasswd
+      Require valid-user
+
+#      HostnameLookups Off
+
+      ProxyPreserveHost On
+      ProxyPass "${PROXY_URI}${PROXY_URI_PREFIX}"
+      ProxyPassReverse "${PROXY_URI}${PROXY_URI_PREFIX}"
+      ${CUSTOM_APACHE_CONFIG}
+    </Location>
+</VirtualHost>
